@@ -193,6 +193,7 @@ class Read:
         self.n_brackets = self.n_brackets + len(nbra) - len(nket)
 
 class Write:
+    """print complete and incomplete data into output files"""
 
     def __init__ (self):
         with open("bibtex_combine.bib", 'w') as outfile:
@@ -208,7 +209,24 @@ class Write:
     
 
 def main():
-    
+    """ This script combines all input bibtex files into a single file called "bibtex_combine.bib"
+        All references in the combined files are unique, and are labeled following the format of
+        AUTHOR:YEAR:PAGE
+        References with incomplete data are dumped into file "bibtex_combine.err"
+        Usage:
+            ./bibtex_combine <bibtex_file1> <bibtex_file2> ...
+    """
+
+    if (len(sys.argv) < 2):
+        print("""
+        This script combines all input bibtex files into a single file called "bibtex_combine.bib"
+        All references in the combined files are unique, and are labeled following the format of AUTHOR:YEAR:PAGE
+        References with incomplete data are dumped into file "bibtex_combine.err"
+        Usage:
+            ./bibtex_combine <bibtex_file1> <bibtex_file2> ...
+    """
+        )
+
     read = Read(*sys.argv)
     write = Write()
     
