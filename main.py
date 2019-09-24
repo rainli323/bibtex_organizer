@@ -40,36 +40,27 @@ class Reference:
 
     def set_author(self, line):
         message = re.sub('author *= *', '', line, re.IGNORECASE)
-        message = re.sub('\"', '', message, re.IGNORECASE)
-        message = re.sub('\"', '', message, re.IGNORECASE)
-        message = re.sub('{', '', message, re.IGNORECASE)
-        message = re.sub('}', '', message, re.IGNORECASE)
         message = re.sub(',.*', '', message, re.IGNORECASE)
         message = re.sub('and.*', '', message, re.IGNORECASE)
-        message = message.rstrip()
-        message = message.lstrip()
-        if message:
-            print(message)
-            message = re.findall(r"\S+", message)[-1]
-            self.author_ = message
-        print(self.author_)
+        message = re.sub('\\\\.', '', message, re.IGNORECASE)
+        message = re.findall(r"\S+", message)[-1]
+        all_letters = re.findall('\w', message)
+        self.author_ = ''.join(all_letters)
 
     def set_year(self, line):
         message = re.search(r"[0-9]+", line)
         if message:
             self.year_ = message.group()
-        print(self.year_)
 
     def set_page(self, line):
-        message = re.search(r"[0-9]+", line)
+        message = re.sub('-.*', '', line, re.IGNORECASE)
+        message = re.search(r"[0-9]+", message)
         if message:
             self.page_ = message.group()
-        print(self.page_)
 
     def set_key(self, line):
         self.key_ = line
         self.all_ref_ = re.sub('LABEL_TBD', line, self.all_ref_, re.IGNORECASE)
-        print(self.key_)
 
 class InputLine:
     """A line from the input file"""
@@ -82,7 +73,6 @@ class InputLine:
         self.n_brackets = read.n_brackets
 
     def is_new_ref (self):
-        global n_brackets
         if (re.search('@', self.data, re.IGNORECASE) and self.n_brackets == 0):
             return True
         else:
@@ -111,21 +101,18 @@ class InputLine:
 
     def is_author(self):
         if re.search('author *=', self.data, re.IGNORECASE):
-            print("author")
             return True
         else:
             return False
 
     def is_year(self):
         if (re.search('year *=', self.data, re.IGNORECASE)):
-            print("year")
             return True
         else:
             return False
 
     def is_page(self):
         if (re.search('(?<!num)pages *=', self.data, re.IGNORECASE)):
-            print("page")
             return True
         else:
             return False
@@ -136,11 +123,7 @@ class Read:
     
     def __init__ (self, *args):
         self.n_brackets = 0
-        self.file_list = args
-
-
-    def read_from_all_files(self):
-        for file_name in self.file_list[1:]:
+        for file_name in args[1:]:
             if not self.read_from_file(file_name):
                 print("File {} does not exist. Exiting..".format(file_name))
                 sys.exit()
@@ -150,8 +133,6 @@ class Read:
         global ref_list 
         global incomplete_ref_list
         global dictionary
-        
-        print(ref_list)
         
         if not os.path.isfile(file_name):
             print("File {} does not exist. Exiting..".format(file_name))
@@ -165,7 +146,6 @@ class Read:
                 line = InputLine(readline, self)
                 line_number += 1
                 if line.is_new_ref():
-                    print(line.data)
                     current_ref = Reference(file_name, line_number)
                     current_ref.record_new_ref(line.data)
                     self.count_brackets(line.data)
@@ -178,10 +158,7 @@ class Read:
                         current_ref.set_year(line.data)
                     current_ref.record(line.data)
                     self.count_brackets(line.data)
-                    print(line.data)
-                    print(self.n_brackets)
                     if line.is_end_of_ref():
-                        print("end of ref")
                         if current_ref.has_complete_data():
                             key = current_ref.author_ + ":" + current_ref.year_ + ":" + current_ref.page_
                             value = current_ref
@@ -215,23 +192,29 @@ class Read:
         nket = re.findall('}', line)
         self.n_brackets = self.n_brackets + len(nbra) - len(nket)
 
+class Write:
 
+    def __init__ (self):
+        with open("bibtex_combine.bib", 'w') as outfile:
+            for i in sorted (dictionary) : 
+                outfile.write(dictionary[i].all_ref_)
+                outfile.write("\n")
+        if incomplete_ref_list:
+            print ('You have reference that do not contain all data. Please check "bibtex_combine.err"') 
+            with open("bibtex_combine.err", 'w') as errfile:
+                for i in incomplete_ref_list : 
+                    errfile.write(i.all_ref_)
+                    errfile.write("\n")
+    
 
-#def main():
+def main():
+    
+    read = Read(*sys.argv)
+    write = Write()
+    
+
 ref_list = []
 incomplete_ref_list = []
 dictionary = {}
-
-read = Read(*sys.argv)
-read.read_from_all_files()
-
-for i in sorted (dictionary) : 
-    print ((i, dictionary[i].all_ref_), end =" ") 
-    
-    #print(ref_list[0].all_ref_)
-    #sort_references()
-    #print_references()
-    #print_incomplete_reference()
-
-#if __name__ == '__main__':
-#  main()
+if __name__ == '__main__':
+  main()
