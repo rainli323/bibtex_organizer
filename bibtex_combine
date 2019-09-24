@@ -197,26 +197,14 @@ class Write:
     """print complete and incomplete data into output files"""
 
     def __init__ (self, args):
-        if (args.output == sys.stdout) :
-            for i in sorted (dictionary) : 
-                print(dictionary[i].all_ref_)
-                print("\n")
-        else: 
-            with open(args.output, 'w') as outfile:
-                for i in sorted (dictionary) : 
-                    outfile.write(dictionary[i].all_ref_)
-                    outfile.write("\n")
+        for i in sorted (dictionary) : 
+            args.output.write(dictionary[i].all_ref_)
+            args.output.write("\n")
         if incomplete_ref_list:
             print ('You have reference that do not contain all data. Please check "{}"'.format(args.error)) 
-            if (args.error == sys.stdout) :
-                for i in incomplete_ref_list : 
-                    print(i.all_ref_)
-                    print("\n")
-            else:
-                with open(args.error, 'w') as errfile:
-                    for i in incomplete_ref_list : 
-                        errfile.write(i.all_ref_)
-                        errfile.write("\n")
+            for i in incomplete_ref_list : 
+                args.error.write(i.all_ref_)
+                args.error.write("\n")
     
 
 def main():
@@ -233,10 +221,6 @@ def main():
     write = Write(args)
     
 
-ref_list = []
-incomplete_ref_list = []
-dictionary = {}
-
 parser = argparse.ArgumentParser(
         description="combine bibtex files and label references", 
         epilog="""
@@ -249,6 +233,11 @@ parser.add_argument('input', nargs='+', help='Input files, the bibtex files that
 parser.add_argument('-o', '--output', type=argparse.FileType('w'), default=sys.stdout, help='Output file, where combined and formatted reference exist')
 parser.add_argument('-e', '--error', type=argparse.FileType('w'), default=sys.stdout, help='Error file,  where references with missing information get dumped')
 args = parser.parse_args()
+
+ref_list = []
+incomplete_ref_list = []
+dictionary = {}
+
 
 if __name__ == '__main__':
   main()
