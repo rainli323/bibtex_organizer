@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import argparse
 import sys
 import os
 import re
@@ -121,9 +122,9 @@ class InputLine:
 class Read:
     """record data from all input files"""
     
-    def __init__ (self, *args):
+    def __init__ (self, args):
         self.n_brackets = 0
-        for file_name in args[1:]:
+        for file_name in args[0:]:
             if not self.read_from_file(file_name):
                 print("File {} does not exist. Exiting..".format(file_name))
                 sys.exit()
@@ -195,44 +196,59 @@ class Read:
 class Write:
     """print complete and incomplete data into output files"""
 
-    def __init__ (self):
-        with open("bibtex_combine.bib", 'w') as outfile:
+    def __init__ (self, args):
+        if (args.output == sys.stdout) :
             for i in sorted (dictionary) : 
-                outfile.write(dictionary[i].all_ref_)
-                outfile.write("\n")
+                print(dictionary[i].all_ref_)
+                print("\n")
+        else: 
+            with open(args.output, 'w') as outfile:
+                for i in sorted (dictionary) : 
+                    outfile.write(dictionary[i].all_ref_)
+                    outfile.write("\n")
         if incomplete_ref_list:
-            print ('You have reference that do not contain all data. Please check "bibtex_combine.err"') 
-            with open("bibtex_combine.err", 'w') as errfile:
+            print ('You have reference that do not contain all data. Please check "{}"'.format(args.error)) 
+            if (args.error == sys.stdout) :
                 for i in incomplete_ref_list : 
-                    errfile.write(i.all_ref_)
-                    errfile.write("\n")
+                    print(i.all_ref_)
+                    print("\n")
+            else:
+                with open(args.error, 'w') as errfile:
+                    for i in incomplete_ref_list : 
+                        errfile.write(i.all_ref_)
+                        errfile.write("\n")
     
 
 def main():
-    """ This script combines all input bibtex files into a single file called "bibtex_combine.bib"
-        All references in the combined files are unique, and are labeled following the format of
-        AUTHOR:YEAR:PAGE
-        References with incomplete data are dumped into file "bibtex_combine.err"
-        Usage:
-            ./bibtex_combine <bibtex_file1> <bibtex_file2> ...
-    """
-
-    if (len(sys.argv) < 2):
-        print("""
-        This script combines all input bibtex files into a single file called "bibtex_combine.bib"
+    """ 
+        This script combines all input bibtex files into a user defined single file
         All references in the combined files are unique, and are labeled following the format of AUTHOR:YEAR:PAGE
-        References with incomplete data are dumped into file "bibtex_combine.err"
+        References with incomplete data are dumped into another user defined file 
         Usage:
-            ./bibtex_combine <bibtex_file1> <bibtex_file2> ...
+             bibtex_combine [-h] [-o OUTPUT] [-e ERROR] input [input ...]
     """
-        )
 
-    read = Read(*sys.argv)
-    write = Write()
+    global args
+    read = Read(args.input)
+    write = Write(args)
     
 
 ref_list = []
 incomplete_ref_list = []
 dictionary = {}
+
+parser = argparse.ArgumentParser(
+        description="combine bibtex files and label references", 
+        epilog="""
+        This script combines all input bibtex files into a user defined single file.
+        All references in the combined files are unique, and are labeled following the format of AUTHOR:YEAR:PAGE.
+        References with incomplete data are dumped into another user defined file.
+        """
+)
+parser.add_argument('input', nargs='+', help='Input files, the bibtex files that need processing')
+parser.add_argument('-o', '--output', type=argparse.FileType('w'), default=sys.stdout, help='Output file, where combined and formatted reference exist')
+parser.add_argument('-e', '--error', type=argparse.FileType('w'), default=sys.stdout, help='Error file,  where references with missing information get dumped')
+args = parser.parse_args()
+
 if __name__ == '__main__':
   main()
