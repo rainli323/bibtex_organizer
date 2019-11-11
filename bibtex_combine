@@ -16,6 +16,7 @@ class Reference:
         self.author_ = ""
         self.year_ = ""
         self.page_ = ""
+        self.eid_ = ""
         self.error_ = ""
         self.key_  = ""
 
@@ -25,7 +26,10 @@ class Reference:
         if not self.year_:
             self.error_ = self.error_ + "No year found! "
         if not self.page_:
-            self.error_ = self.error_ + "No page found! "
+            if not self.eid_:
+                self.error_ = self.error_ + "No page found! "
+            else:
+                self.page_ = self.eid_
         if self.error_:
             return False
         else:
@@ -58,6 +62,12 @@ class Reference:
         message = re.search(r"[0-9]+", message)
         if message:
             self.page_ = message.group()
+
+    def set_eid(self, line):
+        message = re.sub('-.*', '', line, re.IGNORECASE)
+        message = re.search(r"[0-9]+", message)
+        if message:
+            self.eid_ = message.group()
 
     def set_key(self, line):
         self.key_ = line
@@ -118,6 +128,12 @@ class InputLine:
         else:
             return False
 
+    def is_eid(self):
+        if (re.search('(?<!num)eid *=', self.data, re.IGNORECASE)):
+            return True
+        else:
+            return False
+
 
 class Read:
     """record data from all input files"""
@@ -155,6 +171,8 @@ class Read:
                         current_ref.set_author(line.data)
                     if line.is_page():
                         current_ref.set_page(line.data)
+                    if line.is_eid():
+                        current_ref.set_eid(line.data)
                     if line.is_year():
                         current_ref.set_year(line.data)
                     current_ref.record(line.data)
@@ -172,11 +190,12 @@ class Read:
                 elif line.is_garbage():
                     self.count_brackets(line.data)
                 else:
-                    try:
-                        raise SyntaxError('Something wrong with the format, eg. brackets are not closed')
-                    except SyntaxError:
-                        print("something wrong! At file {} at line {}.".format(file_name, line_number))
-                        raise
+                    self.n_brackets = 0
+                    #try:
+                    #    raise SyntaxError('Something wrong with the format, eg. brackets are not closed')
+                    #except SyntaxError:
+                    #    print("something wrong! At file {} at line {}.".format(file_name, line_number))
+                    #    raise
                 readline = infile.readline()
 
         if (self.n_brackets != 0):
