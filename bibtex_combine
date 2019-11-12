@@ -250,7 +250,7 @@ class Write:
         for i in sorted (dictionary) : 
             args.output.write(dictionary[i].all_ref_)
             args.output.write("\n")
-        incomplete_ref_list_remove_string = [i for i in incomplete_ref_list if i.ref_type_ != 'string']
+        incomplete_ref_list_remove_string = [i for i in incomplete_ref_list if i.ref_type_ != 'string' and i.ref_type != 'control']
         incomplete_ref_list_remove_string.sort(key = lambda i: i.ref_type_)
         if incomplete_ref_list_remove_string:
             print ('You have reference that do not contain all data. Please check "{}"'.format(args.error)) 
