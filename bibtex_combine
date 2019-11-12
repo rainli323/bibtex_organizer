@@ -39,7 +39,8 @@ class Reference:
 
 
     def record(self, line):
-        self.all_ref_ = self.all_ref_ + line
+        message = re.sub('\s\s+', '', line )
+        self.all_ref_ = self.all_ref_ + message
 
     def record_new_ref(self, line):
         message = re.sub('{.+,', '{LABEL_TBD,', line, re.IGNORECASE)
@@ -186,7 +187,7 @@ class Read:
                     current_ref.record_new_ref(line.data)
                     current_ref.set_ref_type(line.data)
                     self.count_brackets(line.data)
-                    if line.is_end_of_ref():
+                    if line.is_end_of_ref() and current_ref.is_new_err_ref():
                         incomplete_ref_list.append(current_ref)
                 elif line.is_ref():
                     if line.is_author():
