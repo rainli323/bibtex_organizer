@@ -4,6 +4,7 @@ import argparse
 import sys
 import os
 import re
+from collections import OrderedDict
 
 class Reference:
     """An entry of reference, entire message, author, year, page"""
@@ -12,6 +13,7 @@ class Reference:
     def __init__ (self, filename, linenumber):
         self.from_file_ = filename
         self.from_line_ = linenumber
+        self.ref_type_ = ""
         self.all_ref_ = ""
         self.author_ = ""
         self.year_ = ""
@@ -42,6 +44,11 @@ class Reference:
     def record_new_ref(self, line):
         message = re.sub('{.+,', '{LABEL_TBD,', line, re.IGNORECASE)
         self.all_ref_ = message
+
+    def set_ref_type(self, line):
+        message = re.search(r"[\w]+", line)
+        if message:
+            self.ref_type_ = message.group().lower()
 
     def set_author(self, line):
         message = re.sub('author *= *', '', line, re.IGNORECASE)
@@ -165,7 +172,10 @@ class Read:
                 if line.is_new_ref():
                     current_ref = Reference(file_name, line_number)
                     current_ref.record_new_ref(line.data)
+                    current_ref.set_ref_type(line.data)
                     self.count_brackets(line.data)
+                    if line.is_end_of_ref():
+                        incomplete_ref_list.append(current_ref)
                 elif line.is_ref():
                     if line.is_author():
                         current_ref.set_author(line.data)
@@ -191,6 +201,8 @@ class Read:
                     self.count_brackets(line.data)
                 else:
                     self.n_brackets = 0
+                    # The original code would complain is there are extra } in the input file. But bibtex ignores
+                    # the extra }s, so I should do the same
                     #try:
                     #    raise SyntaxError('Something wrong with the format, eg. brackets are not closed')
                     #except SyntaxError:
@@ -216,12 +228,19 @@ class Write:
     """print complete and incomplete data into output files"""
 
     def __init__ (self, args):
+        for i in incomplete_ref_list : 
+            if i.ref_type_ == 'string':
+                args.output.write(i.all_ref_)
+                args.output.write("\n")
         for i in sorted (dictionary) : 
             args.output.write(dictionary[i].all_ref_)
             args.output.write("\n")
-        if incomplete_ref_list:
+        incomplete_ref_list_remove_string = [i for i in incomplete_ref_list if i.ref_type_ != 'string']
+        incomplete_ref_list_unique = list(OrderedDict.fromkeys(incomplete_ref_list_remove_string))
+        incomplete_ref_list_unique.sort(key = lambda i: i.ref_type_)
+        if incomplete_ref_list_unique:
             print ('You have reference that do not contain all data. Please check "{}"'.format(args.error)) 
-            for i in incomplete_ref_list : 
+            for i in incomplete_ref_list_unique: 
                 args.error.write(i.all_ref_)
                 args.error.write("\n")
     
