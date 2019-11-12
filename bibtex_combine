@@ -239,7 +239,16 @@ class Read:
 class Write:
     """print complete and incomplete data into output files"""
 
+    incomplete_ref_list_compact = []
+    
     def __init__ (self, args):
+        self.write_essential_files()
+        self.write_refs_to_file()
+        self.throw_away_error_refs()
+        self.write_error_refs_to_file()
+
+    def write_essential_files(self):
+
         for i in incomplete_ref_list : 
             if i.ref_type_ == 'control':
                 args.output.write(i.all_ref_)
@@ -247,17 +256,30 @@ class Write:
             if i.ref_type_ == 'string':
                 args.output.write(i.all_ref_)
                 args.output.write("\n")
+    
+    def write_refs_to_file(self):
         for i in sorted (dictionary) : 
             args.output.write(dictionary[i].all_ref_)
             args.output.write("\n")
-        incomplete_ref_list_remove_string = [i for i in incomplete_ref_list if i.ref_type_ != 'string' and i.ref_type_ != 'control']
-        incomplete_ref_list_remove_string.sort(key = lambda i: i.ref_type_)
-        if incomplete_ref_list_remove_string:
+    
+    def throw_away_error_refs(self):
+        self.incomplete_ref_list_compact = \
+            [i  \
+                for i in incomplete_ref_list \
+                        if i.ref_type_ != 'string' \
+                        and i.ref_type_ != 'control'  \
+                        and i.ref_type_ != 'misc'\
+                        and re.search('in preperation', i.all_ref_, re.MULTILINE) == None \
+                        and re.search('submitted', i.all_ref_, re.MULTILINE) == None \
+                        and re.search('Necromancer', i.all_ref_, re.MULTILINE) == None ] #files only related with Sina
+    
+    def write_error_refs_to_file(self):
+        if self.incomplete_ref_list_compact:
             print ('You have reference that do not contain all data. Please check file "{}"'.format(args.error.name)) 
-            for i in incomplete_ref_list_remove_string: 
-                if i.ref_type_ != 'misc' and re.search('Necromancer', i.all_ref_, re.MULTILINE) == None:
-                    args.error.write(i.all_ref_)
-                    args.error.write("\n")
+            self.incomplete_ref_list_compact.sort(key = lambda i: i.ref_type_)
+            for i in self.incomplete_ref_list_compact: 
+                args.error.write(i.all_ref_)
+                args.error.write("\n")
     
 
 def main():
