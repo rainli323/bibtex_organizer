@@ -197,6 +197,8 @@ class Read:
                     current_ref.record(line.data)
                     self.count_brackets(line.data)
                     if line.is_end_of_ref():
+                        if current_ref.ref_type_ == 'book':
+                            current_ref.page_ = 'book'
                         if current_ref.has_complete_data():
                             key = current_ref.author_ + ":" + current_ref.year_ + ":" + current_ref.page_
                             value = current_ref
