@@ -18,6 +18,7 @@ class Reference:
         self.author_ = ""
         self.year_ = ""
         self.page_ = ""
+        self.title_ = ""
         self.eid_ = ""
         self.error_ = ""
         self.key_  = ""
@@ -39,8 +40,7 @@ class Reference:
 
 
     def record(self, line):
-        message = re.sub('\s\s+', '', line )
-        self.all_ref_ = self.all_ref_ + message
+        self.all_ref_ = self.all_ref_ + line
 
     def record_new_ref(self, line):
         message = re.sub('{.+,', '{LABEL_TBD,', line, re.IGNORECASE)
@@ -50,6 +50,15 @@ class Reference:
         message = re.search(r"[\w]+", line)
         if message:
             self.ref_type_ = message.group().lower()
+
+    def set_title(self, line):
+        message = re.search(r"\{(.+)\}", line)
+        if message:
+            self.title_ = message.group(1)
+        else:
+            message = re.search(r"\"(.+)\"", line)
+            if message:
+                self.title_ = message.group(1)
 
     def set_author(self, line):
         message = re.sub('author *= *', '', line, re.IGNORECASE)
@@ -85,11 +94,18 @@ class Reference:
         message = re.sub('   ', ' ', self.all_ref_, flags=re.MULTILINE)
     
     def is_new_err_ref(self):
-        if self.all_ref_ not in seen_err_ref_list:
-            seen_err_ref_list.append(self.all_ref_)
-            return True
+        if not self.title_:
+            if self.all_ref_ in err_all_ref_list:
+                return False
+            else:
+                err_all_ref_list.append(self.all_ref_)
+                return True
         else:
-            return False
+            if self.title_ in ref_title_list:
+                return False
+            else:
+                ref_title_list.append(self.title_)
+                return True
 
 
 class InputLine:
@@ -125,6 +141,12 @@ class InputLine:
     
     def is_garbage (self):
         if (self.n_brackets == 0):
+            return True
+        else:
+            return False
+
+    def is_title(self):
+        if re.search('title *=', self.data, re.IGNORECASE):
             return True
         else:
             return False
@@ -169,7 +191,8 @@ class Read:
         global ref_list 
         global incomplete_ref_list
         global dictionary
-        global seen_err_ref_list
+        global err_all_ref_list
+        global ref_title_list
 
         if not os.path.isfile(file_name):
             print("File {} does not exist. Exiting..".format(file_name))
@@ -190,6 +213,8 @@ class Read:
                     if line.is_end_of_ref() and current_ref.is_new_err_ref():
                         incomplete_ref_list.append(current_ref)
                 elif line.is_ref():
+                    if line.is_title():
+                        current_ref.set_title(line.data)
                     if line.is_author():
                         current_ref.set_author(line.data)
                     if line.is_page():
@@ -210,6 +235,7 @@ class Read:
                             if (key not in dictionary):
                                 dictionary[key] = value
                                 ref_list.append(current_ref)
+                                ref_title_list.append(current_ref.title_)
                         else:
                             current_ref.remove_spacing()
                             if current_ref.is_new_err_ref():
@@ -257,10 +283,8 @@ class Write:
         for i in incomplete_ref_list : 
             if i.ref_type_ == 'control':
                 args.output.write(i.all_ref_)
-                args.output.write("\n")
             if i.ref_type_ == 'string':
                 args.output.write(i.all_ref_)
-                args.output.write("\n")
     
     def write_refs_to_file(self):
         for i in sorted (dictionary) : 
@@ -316,7 +340,8 @@ args = parser.parse_args()
 
 ref_list = []
 incomplete_ref_list = []
-seen_err_ref_list = []
+err_all_ref_list = []
+ref_title_list = []
 dictionary = {}
 
 
