@@ -80,6 +80,9 @@ class Reference:
         self.key_ = line
         self.all_ref_ = re.sub('LABEL_TBD', line, self.all_ref_, re.IGNORECASE)
 
+    def remove_spacing(self):
+        message = re.sub('   ', ' ', self.all_ref_, flags=re.MULTILINE)
+    
     def is_new_err_ref(self):
         if self.all_ref_ not in seen_err_ref_list:
             seen_err_ref_list.append(self.all_ref_)
@@ -207,6 +210,7 @@ class Read:
                                 dictionary[key] = value
                                 ref_list.append(current_ref)
                         else:
+                            current_ref.remove_spacing()
                             if current_ref.is_new_err_ref():
                                 incomplete_ref_list.append(current_ref)
                 elif line.is_garbage():
@@ -269,7 +273,7 @@ class Write:
                         if i.ref_type_ != 'string' \
                         and i.ref_type_ != 'control'  \
                         and i.ref_type_ != 'misc'\
-                        and re.search('in preperation', i.all_ref_, re.MULTILINE) == None \
+                        and re.search('in preparation', i.all_ref_, re.MULTILINE) == None \
                         and re.search('submitted', i.all_ref_, re.MULTILINE) == None \
                         and re.search('Necromancer', i.all_ref_, re.MULTILINE) == None ] #files only related with Sina
     
