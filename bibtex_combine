@@ -80,6 +80,14 @@ class Reference:
         self.key_ = line
         self.all_ref_ = re.sub('LABEL_TBD', line, self.all_ref_, re.IGNORECASE)
 
+    def is_new_err_ref(self):
+        if self.all_ref_ not in seen_err_ref_list:
+            seen_err_ref_list.append(self.all_ref_)
+            return True
+        else:
+            return False
+
+
 class InputLine:
     """A line from the input file"""
     
@@ -157,7 +165,8 @@ class Read:
         global ref_list 
         global incomplete_ref_list
         global dictionary
-        
+        global seen_err_ref_list
+
         if not os.path.isfile(file_name):
             print("File {} does not exist. Exiting..".format(file_name))
             sys.exit()
@@ -196,7 +205,8 @@ class Read:
                                 dictionary[key] = value
                                 ref_list.append(current_ref)
                         else:
-                            incomplete_ref_list.append(current_ref)
+                            if current_ref.is_new_err_ref():
+                                incomplete_ref_list.append(current_ref)
                 elif line.is_garbage():
                     self.count_brackets(line.data)
                 else:
@@ -229,6 +239,9 @@ class Write:
 
     def __init__ (self, args):
         for i in incomplete_ref_list : 
+            if i.ref_type_ == 'control':
+                args.output.write(i.all_ref_)
+                args.output.write("\n")
             if i.ref_type_ == 'string':
                 args.output.write(i.all_ref_)
                 args.output.write("\n")
@@ -236,13 +249,13 @@ class Write:
             args.output.write(dictionary[i].all_ref_)
             args.output.write("\n")
         incomplete_ref_list_remove_string = [i for i in incomplete_ref_list if i.ref_type_ != 'string']
-        incomplete_ref_list_unique = list(OrderedDict.fromkeys(incomplete_ref_list_remove_string))
-        incomplete_ref_list_unique.sort(key = lambda i: i.ref_type_)
-        if incomplete_ref_list_unique:
+        incomplete_ref_list_remove_string.sort(key = lambda i: i.ref_type_)
+        if incomplete_ref_list_remove_string:
             print ('You have reference that do not contain all data. Please check "{}"'.format(args.error)) 
-            for i in incomplete_ref_list_unique: 
-                args.error.write(i.all_ref_)
-                args.error.write("\n")
+            for i in incomplete_ref_list_remove_string: 
+                if i.ref_type_ != 'misc':
+                    args.error.write(i.all_ref_)
+                    args.error.write("\n")
     
 
 def main():
@@ -274,6 +287,7 @@ args = parser.parse_args()
 
 ref_list = []
 incomplete_ref_list = []
+seen_err_ref_list = []
 dictionary = {}
 
 
