@@ -253,7 +253,7 @@ class Write:
         incomplete_ref_list_remove_string = [i for i in incomplete_ref_list if i.ref_type_ != 'string' and i.ref_type_ != 'control']
         incomplete_ref_list_remove_string.sort(key = lambda i: i.ref_type_)
         if incomplete_ref_list_remove_string:
-            print ('You have reference that do not contain all data. Please check "{}"'.format(args.error)) 
+            print ('You have reference that do not contain all data. Please check file "{}"'.format(args.error.name)) 
             for i in incomplete_ref_list_remove_string: 
                 if i.ref_type_ != 'misc' and re.search('Necromancer', i.all_ref_, re.MULTILINE) == None:
                     args.error.write(i.all_ref_)
