@@ -160,7 +160,7 @@ class InputLine:
             return False
 
     def is_title(self):
-        if re.search('title *=', self.data, re.IGNORECASE):
+        if re.search('\s+title *=', self.data, re.IGNORECASE):
             return True
         else:
             return False
@@ -337,6 +337,7 @@ class Write:
             for i in self.incomplete_ref_list_compact: 
                 args.error.write(i.all_ref_)
                 args.error.write("\n")
+                print(i.title_)
     
 
 def main():
