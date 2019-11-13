@@ -60,7 +60,9 @@ class Reference:
         else:
             message = re.search(r"\"(.+)\"", line)
             if message:
-                self.title_ = message.group(1)
+                temp = message.group(1).lower()
+                all_letters = re.findall('\w', temp)
+                self.title_ = ''.join(all_letters)
 
     def set_author(self, line):
         message = re.sub('author *= *', '', line, re.IGNORECASE)
@@ -107,7 +109,6 @@ class Reference:
                 return False
             else:
                 ref_title_list.append(self.title_)
-                print(self.title_)
                 return True
 
 
@@ -196,6 +197,7 @@ class Read:
         global dictionary
         global err_all_ref_list
         global ref_title_list
+        global good_ref_title_list
 
         if not os.path.isfile(file_name):
             print("File {} does not exist. Exiting..".format(file_name))
@@ -238,7 +240,7 @@ class Read:
                             if (key not in dictionary):
                                 dictionary[key] = value
                                 ref_list.append(current_ref)
-                                ref_title_list.append(current_ref.title_)
+                                good_ref_title_list.append(current_ref.title_)
                         else:
                             current_ref.remove_spacing()
                             if current_ref.is_new_err_ref():
@@ -303,6 +305,9 @@ class Write:
                         and i.ref_type_ != 'misc'\
                         and re.search('in preparation', i.all_ref_, re.MULTILINE) == None \
                         and re.search('submitted', i.all_ref_, re.MULTILINE) == None \
+                        and i.title_ not in good_ref_title_list \
+                        and re.search('arxiv', i.all_ref_, re.MULTILINE) == None \
+                        and re.search('sina', i.all_ref_, re.MULTILINE) == None  #files only related with Sina \
                         and re.search('Necromancer', i.all_ref_, re.MULTILINE) == None ] #files only related with Sina
     
     def write_error_refs_to_file(self):
@@ -345,6 +350,7 @@ ref_list = []
 incomplete_ref_list = []
 err_all_ref_list = []
 ref_title_list = []
+good_ref_title_list = []
 dictionary = {}
 
 
