@@ -16,6 +16,7 @@ class Reference:
         self.ref_type_ = ""
         self.all_ref_ = ""
         self.author_ = ""
+        self.editor_ = ""
         self.year_ = ""
         self.page_ = ""
         self.title_ = ""
@@ -25,7 +26,7 @@ class Reference:
 
     def has_complete_data(self):
         if not self.author_:
-            self.error_ = self.error_ + "No auther found! "
+            self.error_ = self.error_ + "No author found! "
         if not self.year_:
             self.error_ = self.error_ + "No year found! "
         if not self.page_:
@@ -73,6 +74,15 @@ class Reference:
         all_letters = re.findall('\w', message)
         self.author_ = ''.join(all_letters)
 
+    def set_editor(self, line):
+        message = re.sub('editor *= *', '', line, re.IGNORECASE)
+        message = re.sub(',.*', '', message, re.IGNORECASE)
+        message = re.sub('and.*', '', message, re.IGNORECASE)
+        message = re.sub('\\\\.', '', message, re.IGNORECASE)
+        message = re.findall(r"\S+", message)[-1]
+        all_letters = re.findall('\w', message)
+        self.editor_ = ''.join(all_letters)
+
     def set_year(self, line):
         message = re.search(r"[0-9]+", line)
         if message:
@@ -94,8 +104,8 @@ class Reference:
         self.key_ = line
         self.all_ref_ = re.sub('LABEL_TBD', line, self.all_ref_, re.IGNORECASE)
 
-    def remove_spacing(self):
-        message = re.sub('   ', ' ', self.all_ref_, flags=re.MULTILINE)
+    #def remove_spacing(self):
+    #    message = re.sub('   ', ' ', self.all_ref_, flags=re.MULTILINE)
     
     def is_new_err_ref(self):
         if not self.title_:
@@ -161,6 +171,12 @@ class InputLine:
         else:
             return False
 
+    def is_editor(self):
+        if re.search('editor *=', self.data, re.IGNORECASE):
+            return True
+        else:
+            return False
+
     def is_year(self):
         if (re.search('year *=', self.data, re.IGNORECASE)):
             return True
@@ -222,6 +238,8 @@ class Read:
                         current_ref.set_title(line.data)
                     if line.is_author():
                         current_ref.set_author(line.data)
+                    if line.is_editor():
+                        current_ref.set_editor(line.data)
                     if line.is_page():
                         current_ref.set_page(line.data)
                     if line.is_eid():
@@ -231,8 +249,10 @@ class Read:
                     current_ref.record(line.data)
                     self.count_brackets(line.data)
                     if line.is_end_of_ref():
-                        if current_ref.ref_type_ == 'book':
+                        if current_ref.ref_type_ == 'book' and not current_ref.page_:
                             current_ref.page_ = 'book'
+                        if current_ref.ref_type_ == 'book' and not current_ref.author_:
+                            current_ref.author_ = current_ref.editor_
                         if current_ref.has_complete_data():
                             key = current_ref.author_ + ":" + current_ref.year_ + ":" + current_ref.page_
                             value = current_ref
@@ -242,7 +262,7 @@ class Read:
                                 ref_list.append(current_ref)
                                 good_ref_title_list.append(current_ref.title_)
                         else:
-                            current_ref.remove_spacing()
+                    #        current_ref.remove_spacing()
                             if current_ref.is_new_err_ref():
                                 incomplete_ref_list.append(current_ref)
                 elif line.is_garbage():
