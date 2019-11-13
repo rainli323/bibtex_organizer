@@ -52,9 +52,11 @@ class Reference:
             self.ref_type_ = message.group().lower()
 
     def set_title(self, line):
-        message = re.search(r"\{(.+)\}", line)
+        message = re.search(r"\{+(.+)\}", line)
         if message:
-            self.title_ = message.group(1)
+            temp = message.group(1).lower()
+            all_letters = re.findall('\w', temp)
+            self.title_ = ''.join(all_letters)
         else:
             message = re.search(r"\"(.+)\"", line)
             if message:
@@ -105,6 +107,7 @@ class Reference:
                 return False
             else:
                 ref_title_list.append(self.title_)
+                print(self.title_)
                 return True
 
 
