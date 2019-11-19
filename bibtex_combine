@@ -44,7 +44,10 @@ class Reference:
         self.all_ref_ = self.all_ref_ + line
 
     def record_new_ref(self, line):
-        message = re.sub('{.+,', '{LABEL_TBD,', line, re.IGNORECASE)
+        if re.search(r"\{+(.+)\}", line):
+            message = line
+        else:
+            message = re.sub('{.+,', '{LABEL_TBD,', line, re.IGNORECASE)
         self.all_ref_ = message
 
     def set_ref_type(self, line):
