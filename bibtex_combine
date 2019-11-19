@@ -337,7 +337,6 @@ class Write:
             for i in self.incomplete_ref_list_compact: 
                 args.error.write(i.all_ref_)
                 args.error.write("\n")
-                print(i.title_)
     
 
 def main():
