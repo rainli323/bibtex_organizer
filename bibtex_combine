@@ -309,8 +309,6 @@ class Write:
     def write_essential_files(self):
 
         for i in incomplete_ref_list : 
-            if i.ref_type_ == 'control':
-                args.output.write(i.all_ref_)
             if i.ref_type_ == 'string':
                 args.output.write(i.all_ref_)
     
@@ -324,7 +322,6 @@ class Write:
             [i  \
                 for i in incomplete_ref_list \
                         if i.ref_type_ != 'string' \
-                        and i.ref_type_ != 'control'  \
                         and i.ref_type_ != 'misc'\
                         and re.search('in preparation', i.all_ref_, re.MULTILINE) == None \
                         and re.search('submitted', i.all_ref_, re.MULTILINE) == None \
