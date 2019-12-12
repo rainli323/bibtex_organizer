@@ -136,7 +136,7 @@ class InputLine:
         self.n_brackets = read.n_brackets
 
     def is_new_ref (self):
-        if (re.search('^\%', self.data)):
+        if (re.search('^%', self.data)):
             return False
         if (re.search('@', self.data, re.IGNORECASE) and self.n_brackets == 0):
             return True
@@ -144,7 +144,7 @@ class InputLine:
             return False
     
     def is_ref (self):
-        if (re.search('^\%', self.data)):
+        if (re.search('^%', self.data)):
             return False
         if (self.n_brackets > 0):
             return True
@@ -152,7 +152,7 @@ class InputLine:
             return False
     
     def is_end_of_ref (self):
-        if (re.search('^\%', self.data)):
+        if (re.search('^%', self.data)):
             return False
         nbra = re.findall('{', self.data)
         nket = re.findall('}', self.data)
@@ -163,7 +163,7 @@ class InputLine:
             return False
     
     def is_garbage (self):
-        if (re.search('^\%', self.data)):
+        if (re.search('^%', self.data)):
             return True
         if (self.n_brackets == 0):
             return True
@@ -171,7 +171,7 @@ class InputLine:
             return False
 
     def is_title(self):
-        if (re.search('^\%', self.data)):
+        if (re.search('^%', self.data)):
             return False
         if re.search('(?<!book)title *=', self.data, re.IGNORECASE):
             return True
@@ -179,7 +179,7 @@ class InputLine:
             return False
 
     def is_author(self):
-        if (re.search('^\%', self.data)):
+        if (re.search('^%', self.data)):
             return False
         if re.search('author *=', self.data, re.IGNORECASE):
             return True
@@ -187,7 +187,7 @@ class InputLine:
             return False
 
     def is_editor(self):
-        if (re.search('^\%', self.data)):
+        if (re.search('^%', self.data)):
             return False
         if re.search('editor *=', self.data, re.IGNORECASE):
             return True
@@ -195,7 +195,7 @@ class InputLine:
             return False
 
     def is_year(self):
-        if (re.search('^\%', self.data)):
+        if (re.search('^%', self.data)):
             return False
         if (re.search('year *=', self.data, re.IGNORECASE)):
             return True
@@ -203,7 +203,7 @@ class InputLine:
             return False
 
     def is_page(self):
-        if (re.search('^\%', self.data)):
+        if (re.search('^%', self.data)):
             return False
         if (re.search('(?<!num)pages *=', self.data, re.IGNORECASE)):
             return True
@@ -211,7 +211,7 @@ class InputLine:
             return False
 
     def is_eid(self):
-        if (re.search('^\%', self.data)):
+        if (re.search('^%', self.data)):
             return False
         if (re.search('(?<!num)eid *=', self.data, re.IGNORECASE)):
             return True
@@ -288,8 +288,9 @@ class Read:
                     #        current_ref.remove_spacing()
                             if current_ref.is_new_err_ref():
                                 incomplete_ref_list.append(current_ref)
-                elif line.is_garbage():
-                    self.count_brackets(line.data)
+                #elif line.is_garbage():
+                    #self.count_brackets(line.data)
+
                 else:
                     self.n_brackets = 0
                     # The original code would complain is there are extra } in the input file. But bibtex ignores
@@ -312,7 +313,7 @@ class Read:
         return True
          
     def count_brackets(self, line):
-        if (re.search('%', line)):
+        if (re.search('^%', line)):
             nbra = ''
             nket = ''
         else:
@@ -326,7 +327,7 @@ class Write:
     incomplete_ref_list_compact = []
     
     def __init__ (self, args):
-#        self.write_essential_files()
+        self.write_essential_files()
         self.write_refs_to_file()
         self.throw_away_error_refs()
         self.write_error_refs_to_file()
