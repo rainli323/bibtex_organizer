@@ -313,7 +313,6 @@ class Read:
          
     def count_brackets(self, line):
         if (re.search('%', line)):
-            print("match")
             nbra = ''
             nket = ''
         else:
@@ -340,8 +339,6 @@ class Write:
     
     def write_refs_to_file(self):
         for i in sorted (dictionary) : 
-            args.output.write(dictionary[i].key_)
-            print(dictionary[i].key_)
             args.output.write(dictionary[i].all_ref_)
             args.output.write("\n")
     
