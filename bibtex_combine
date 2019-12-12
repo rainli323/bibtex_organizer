@@ -44,7 +44,7 @@ class Reference:
         self.all_ref_ = self.all_ref_ + line
 
     def record_new_ref(self, line):
-        if re.search(r"\{+(.+)\}", line):
+        if re.search(r"\{+(.+)\}", line): # a single line being the entire ref
             message = line
         else:
             message = re.sub('{.+,', '{LABEL_TBD,', line, re.IGNORECASE)
@@ -71,7 +71,7 @@ class Reference:
     def set_author(self, line):
         message = re.sub('author *= *', '', line, re.IGNORECASE)
         message = re.sub(',.*', '', message, re.IGNORECASE)
-        message = re.sub('and.*', '', message, re.IGNORECASE)
+        message = re.sub('and .*', '', message, re.IGNORECASE)
         message = re.sub('\\\\.', '', message, re.IGNORECASE)
         message = re.findall(r"\S+", message)[-1]
         all_letters = re.findall('\w', message)
@@ -136,18 +136,24 @@ class InputLine:
         self.n_brackets = read.n_brackets
 
     def is_new_ref (self):
+        if (re.search('^\%', self.data)):
+            return False
         if (re.search('@', self.data, re.IGNORECASE) and self.n_brackets == 0):
             return True
         else:
             return False
     
     def is_ref (self):
+        if (re.search('^\%', self.data)):
+            return False
         if (self.n_brackets > 0):
             return True
         else:
             return False
     
     def is_end_of_ref (self):
+        if (re.search('^\%', self.data)):
+            return False
         nbra = re.findall('{', self.data)
         nket = re.findall('}', self.data)
         current_n_brackets = self.n_brackets + len(nbra) - len(nket)
@@ -157,42 +163,56 @@ class InputLine:
             return False
     
     def is_garbage (self):
+        if (re.search('^\%', self.data)):
+            return True
         if (self.n_brackets == 0):
             return True
         else:
             return False
 
     def is_title(self):
+        if (re.search('^\%', self.data)):
+            return False
         if re.search('(?<!book)title *=', self.data, re.IGNORECASE):
             return True
         else:
             return False
 
     def is_author(self):
+        if (re.search('^\%', self.data)):
+            return False
         if re.search('author *=', self.data, re.IGNORECASE):
             return True
         else:
             return False
 
     def is_editor(self):
+        if (re.search('^\%', self.data)):
+            return False
         if re.search('editor *=', self.data, re.IGNORECASE):
             return True
         else:
             return False
 
     def is_year(self):
+        if (re.search('^\%', self.data)):
+            return False
         if (re.search('year *=', self.data, re.IGNORECASE)):
             return True
         else:
             return False
 
     def is_page(self):
+        if (re.search('^\%', self.data)):
+            return False
         if (re.search('(?<!num)pages *=', self.data, re.IGNORECASE)):
             return True
         else:
             return False
 
     def is_eid(self):
+        if (re.search('^\%', self.data)):
+            return False
         if (re.search('(?<!num)eid *=', self.data, re.IGNORECASE)):
             return True
         else:
@@ -285,14 +305,20 @@ class Read:
             try:
                 raise SyntaxError('Something wrong with the format, eg. brackets are not closed')
             except SyntaxError:
-                print("something wrong! At file {} at line {}.".format(file_name, line_number))
+                print("Something wrong! At file {} at line {}.".format(file_name, line_number))
+                print("Working on reference starting at file {} line {}.".format(current_ref.from_file_, current_ref.from_line_))
                 raise
 
         return True
          
     def count_brackets(self, line):
-        nbra = re.findall('{', line)
-        nket = re.findall('}', line)
+        if (re.search('%', line)):
+            print("match")
+            nbra = ''
+            nket = ''
+        else:
+            nbra = re.findall('{', line)
+            nket = re.findall('}', line)
         self.n_brackets = self.n_brackets + len(nbra) - len(nket)
 
 class Write:
@@ -301,7 +327,7 @@ class Write:
     incomplete_ref_list_compact = []
     
     def __init__ (self, args):
-        self.write_essential_files()
+#        self.write_essential_files()
         self.write_refs_to_file()
         self.throw_away_error_refs()
         self.write_error_refs_to_file()
@@ -314,6 +340,8 @@ class Write:
     
     def write_refs_to_file(self):
         for i in sorted (dictionary) : 
+            args.output.write(dictionary[i].key_)
+            print(dictionary[i].key_)
             args.output.write(dictionary[i].all_ref_)
             args.output.write("\n")
     
